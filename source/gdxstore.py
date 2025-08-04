@@ -305,8 +305,6 @@ def main():
     # Default settings
     conf = RawConfigParser()
     conf.read('config.ini')
-    print(os.getcwd())
-    print(conf)
     default_storage_folder = conf['storage'].get('storage_folder')
 
     # Command line options
@@ -363,7 +361,6 @@ def main():
             words = line.split(' ')
             if words[0]=="commit": 
                 commit = get_commit_folder_name(words[1])
-                print(commit)
                 if stored_files is not None:
                     gdxstore_history.insert(ii-1+n_inserted, "\nStored files:")
                     gdxstore_history.insert(ii+n_inserted, stored_files)
