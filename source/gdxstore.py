@@ -304,7 +304,9 @@ class GDXStore:
 def main():
     # Default settings
     conf = RawConfigParser()
-    conf.read('../config.ini')
+    conf.read('config.ini')
+    print(os.getcwd())
+    print(conf)
     default_storage_folder = conf['storage'].get('storage_folder')
 
     # Command line options
