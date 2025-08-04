@@ -30,6 +30,7 @@ import time
 from datetime import datetime
 import shutil
 import sys
+from configparser import RawConfigParser
 import argparse
 from pathlib import Path
 from typing import List, Optional
@@ -301,7 +302,12 @@ class GDXStore:
     
 
 def main():
-    """Main function with command line interface."""
+    # Default settings
+    conf = RawConfigParser()
+    conf.read('config.ini')
+    default_storage_folder = conf['storage'].get('storage_folder')
+
+    # Command line options
     parser = argparse.ArgumentParser(description='Store and inspect GDX files')
     parser.add_argument('-s', action='store_true',
                        help='Store a file')
@@ -309,8 +315,8 @@ def main():
                        help='Run gdxdiff')
     parser.add_argument('files', nargs='*',
                        help='GDX file(s) to store or compare')
-    parser.add_argument('--storage-folder', default='/data/cmcc/mg01025/witch_results',
-                       help='Storage folder path (default: /data/cmcc/mg01025/witch_results)')
+    parser.add_argument('--storage-folder', default=default_storage_folder,
+                       help='Storage folder path (default set in config.ini)')
     parser.add_argument('--no-timing-validation', action='store_true',
                        help='Skip timing validation')
     parser.add_argument('--log', action='store_true',
