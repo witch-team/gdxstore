@@ -49,31 +49,14 @@ def run_command(command):
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         raise GDXStoreError("Command failed: {}\nError: {}".format(command, e.stderr))
-        
-# old version, incompatible with python 3.6, the version on juno
-# def run_command(self, command: str) -> str:
-#     """Run a shell command and return output."""
-#     try:
-#         result = subprocess.run(
-#             command,
-#             capture_output=True,
-#             shell=True,
-#             text=True,
-#             check=False
-#         )
-#         return result.stdout.strip()
-#     except subprocess.CalledProcessError as e:
-#         raise GDXStoreError(f"Command failed: {command}\nError: {e.stderr}")
 
 def get_commit_folder_name(commit: str) -> str:
     """Get 8-character hash of the commit (=folder name)"""
     return run_command('git rev-parse --short=8 ' + str(commit))
 
-
 class GDXStoreError(Exception):
     """Custom exception for GDX storage errors."""
     pass
-
 
 class GDXStore:
     """Handles storage of GDX files with git version control."""
@@ -84,6 +67,8 @@ class GDXStore:
         self.file_to_store = file_to_store
         self.storage_folder = Path(storage_folder)
         self.recipe = recipe
+
+        self.patch = False
 
         self.commit_hash = self.compute_commit_hash()
         self.run_name = self.compute_run_name()
@@ -144,46 +129,6 @@ class GDXStore:
             else:
                 raise GDXStoreError(f"{self.file_to_store} is not among make targets, and no recipe has been specified.\n"
                                     F"Rerun the code with the --recipe flag pointing to a script to reproduce the result.")
-
-            # old version with makefiles
-            #custom_makefile = Path(self.storage_folder / self.commit_hash / "Makefile")
-            # # Search among custom targets
-            # custom_make_targets = self.get_make_targets(options = "--file=" + str(custom_makefile))
-            # if self.file_to_store in custom_make_targets:
-            #     print(
-            #         f'Found a recipe for {self.file_to_store} in the custom makefile {str(custom_makefile)}\n'
-            #         f'Double check that the recipe is valid! (press any key to confirm)'
-            #     )
-            #     input("")
-            # else:
-            #     print(
-            #         f'{self.file_to_store} is not reproducible through makefiles.\n'
-            #         f'Would you like to store the recipe for {self.file_to_store} in the archived makefile?\n'
-            #         f'1. Yes\n'
-            #         f'2. No\n'
-            #     )
-            #     add_custom_recipe = input()
-            #     while (add_custom_recipe!='1') and (add_custom_recipe!='2'):
-            #         print(f'Please select one of the 2 options.\n')
-            #         add_custom_recipe = input()
-            #     if (add_custom_recipe=='1'):
-            #         custom_makefile = Path(self.storage_folder / self.commit_hash / "Makefile")
-            #         print('created path')
-            #         if custom_makefile.is_file():
-            #             print(f'A custom makefile already exists at {str(custom_makefile)}\n')
-            #         else:
-            #             print('trying to reach makefile')
-            #             with open(custom_makefile, 'w') as f:
-            #                 print('writing to makefile')
-            #                 f.write(f'# Custom recipes for the result files stored in this folder\n')
-            #             print(f'A custom makefile has been created at {str(custom_makefile)}\n')
-            #         with open(custom_makefile, 'a') as f:
-            #             f.write(f'\n{self.run_name}={self.file_to_store}\n')
-            #             f.write(f'{self.run_name}: $({self.run_name})\n')
-            #             f.write(f'$({self.run_name}): # Insert dependencies here\n')
-            #             f.write(f'    # Insert command here\n')
-            #         print(f'Lines have been added to the custom makefile. Please edit it')
-            #     exit()
         else:
             print(f"✓ {self.file_to_store} is reproducible through makefiles")
     
@@ -191,22 +136,35 @@ class GDXStore:
         """Check for uncommitted changes in git."""
         uncommitted_files = run_command("git diff --name-only").split()
         if uncommitted_files:
-            raise GDXStoreError(
+            print(
                 f'There are uncommitted changes: {uncommitted_files}\n'
-                'Please commit or stash changes before storing results.'
+                'Do you want to create a patch with these changes? (y/n).'
             )
-        print("✓ No uncommitted changes found")
+            patch_choice = input('')
+            while not any([patch_choice==aa for aa in ('y', 'n')]):
+                print('Please provide a valid choice (y/n).\n')
+                patch_choice = input()
+            if patch_choice=='y':
+                self.patch = True
+            else:
+                print('Stopping the storage process.')
+                exit()
+        else:
+            print("✓ No uncommitted changes found")
     
     def get_latest_source_change(self) -> tuple:
         """Get the latest modified file from the last commit and its timestamp."""
         try:
-            committed_files = run_command("git show --pretty=\"\" --name-only").split()
+            changed_source_files = run_command("git show --pretty=\"\" --name-only").split()
+            if self.patch:
+                patched_files = run_command("git diff --name-only").split()
+                changed_source_files += patched_files
 
-            file_mtimes = [os.stat(f)[stat.ST_MTIME] for f in committed_files]
+            file_mtimes = [os.stat(f)[stat.ST_MTIME] for f in changed_source_files]
             # Find argmax without numpy to reduce dependencies
             latest_idx = [i for i in range(len(file_mtimes)) if file_mtimes[i]==max(file_mtimes)][0]
             # latest_idx = np.argmax(file_mtimes)
-            latest_file = committed_files[latest_idx]
+            latest_file = changed_source_files[latest_idx]
             latest_time = file_mtimes[latest_idx]
             
             print(f"Latest modified file: {latest_file}")
@@ -230,8 +188,8 @@ class GDXStore:
                 raise GDXStoreError(f"Empty or invalid error file: {error_filename}")
             
             # Extract timestamp from header
-            start_time_str = header.split(' ', maxsplit=1)[1]
-            dt = datetime.strptime(start_time_str, "%m/%d/%y %H:%M:%S")
+            self.start_time_str = header.split(' ', maxsplit=1)[1]
+            dt = datetime.strptime(self.start_time_str, "%m/%d/%y %H:%M:%S")
             start_timestamp = dt.timestamp()
             
             print(f"Simulation started on: {time.ctime(start_timestamp)}")
@@ -247,19 +205,32 @@ class GDXStore:
         if start_timestamp < latest_source_time:
             time_diff = latest_source_time - start_timestamp
             raise GDXStoreError(
-                f"Execution started before the latest file change!\n"
+                f"Execution started before the latest file change.\n"
                 f"Latest change: {time.ctime(latest_source_time)}\n"
                 f"Execution start: {time.ctime(start_timestamp)}"
             )
-        print("✓ Execution time > Latest change!")
+        print("✓ Execution time > Latest change")
     
-    def store_file(self, commit_hash: str) -> None:
+    def store_file(self) -> None:
         """Store the GDX file in the storage folder."""
         if not os.path.exists(self.file_to_store):
             raise GDXStoreError(f"Target file does not exist: {self.file_to_store}")
         
         # Copy file
-        dest_file = self.dest_dir / self.file_to_store
+        if self.patch:
+            file_to_store_name = self.file_to_store.split('.')[0]
+            file_timestamp = self.start_time_str.replace(' ', '_')
+            file_timestamp = file_timestamp.replace(':', '')
+            file_timestamp = file_timestamp.replace('/', '')
+            patched_file_to_store = file_to_store_name + '_' + file_timestamp + '.gdx'
+            patch_file_name = file_to_store_name + '_' + file_timestamp + '.patch'
+            patch_file_path = self.dest_dir / patch_file_name
+            run_command('git diff > ' + str(patch_file_path))
+            print(f"✓ Patch saved: {patch_file_path}")
+            dest_file = self.dest_dir / patched_file_to_store
+        else:
+            dest_file = self.dest_dir / self.file_to_store
+
         shutil.copy2(self.file_to_store, dest_file)
         
         print(f"✓ File stored: {dest_file}")
@@ -286,9 +257,7 @@ class GDXStore:
             if validate_timing:
                 self.validate_timing(start_timestamp, latest_source_time)
             
-            # Store the file
-            commit_hash = self.commit_hash
-            self.store_file(commit_hash)
+            self.store_file()
             
             print("=" * 50)
             print("✓ GDX storage completed successfully")
