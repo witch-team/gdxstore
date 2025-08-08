@@ -326,14 +326,16 @@ def main():
         stored_files = None
         gdxstore_history = git_history.copy()
         n_inserted = 0
+        jj = 0
         for (ii, line) in enumerate(git_history):
             words = line.split(' ')
             if words[0]=="commit": 
-                gdxstore_history[ii] = f"\033[33m" + gdxstore_history[ii] + f"\033[0m"
+                gdxstore_history[jj] = f"\033[33m" + gdxstore_history[jj] + f"\033[0m"
                 commit = get_commit_folder_name(words[1])
                 if stored_files is not None:
                     gdxstore_history.insert(ii-1+n_inserted, f"\n\033[36mStored files\033[0m")
                     gdxstore_history.insert(ii+n_inserted, stored_files)
+                    jj += 2
                     n_inserted += 2
                     stored_files = None
                 try:
@@ -344,6 +346,7 @@ def main():
                         stored_files = '\n'.join(stored_ls)
                 except: 
                     pass
+            jj += 1
         gdxstore_history = '\n'.join(gdxstore_history)
         os.environ['LESS'] = '-R' # to enable colours
         pager(gdxstore_history)
