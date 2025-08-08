@@ -20,7 +20,7 @@ and the log history start date.
 ## Usage examples
 - Store a file:
   
-`python gdxstore.py -s results_ssp2_bau.gdx`
+`gdxstore.py -s results_ssp2_bau.gdx`
 
 The code checks that the file is a makefile target. If not, it asks the user to provide
 a script used to produce it, so that it can be stored along with the file for reproducibility.
@@ -35,13 +35,13 @@ even if the latest change is later than the run start time, you can avoid this c
 changes to the code while the code is running and then you revert them.
 - Display the git log including the list of stored files for each commit:
 
-`python gdxstore.py --log`
+`gdxstore.py --log`
 - Compare the current version of a result file with one from a previous commit:
   
-`python gdxstore.py -d results_ssp2_ctax_200.gdx --commit 353d204b05029d94cf4d82`
+`gdxstore.py -d results_ssp2_ctax_200.gdx --commit 353d204b05029d94cf4d82`
 
 This calls gdxdiff. TODO: add gdxdiff options.
 - Override the default storage directory:
   
-`python gdxstore.py -s results_ssp2_bau.gdx --storage-folder ../temp_results`
+`gdxstore.py -s results_ssp2_bau.gdx --storage-folder ../temp_results`
 
