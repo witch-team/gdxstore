@@ -299,7 +299,6 @@ def main():
     # Storage
     if args.s:
         for file in args.files:    
-            print('\n')
             store = GDXStore(file, args.storage_folder, args.recipe)
             store.run(validate_timing=not args.no_timing_validation)
     # Diff
