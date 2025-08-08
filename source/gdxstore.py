@@ -114,7 +114,8 @@ class GDXStore:
                         recipe_dir.mkdir(parents=True)
                     except FileExistsError:
                         pass
-                    dest_file = recipe_dir / self.recipe
+                    recipe_name = str(self.recipe).split("/")[-1]
+                    dest_file = recipe_dir / recipe_name
                     shutil.copy2(self.recipe, dest_file)
                     print(f"✓ {self.recipe} has been copied to {str(recipe_dir)}.")
                     recipe_file = self.storage_folder / self.commit_hash / "recipes.txt"
