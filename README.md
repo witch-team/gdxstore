@@ -16,6 +16,20 @@ This is the path where all the files will be stored. A new subfolder will be cre
 for each commit with files to store.
 The plan is to add more global options to `config.ini`, such as default gdxdiff tolerances
 and the log history start date.
+If on juno or cassandra, in order to let other people use your directory for storage, you need to
+- let them traverse your main folder in `/data`:
+```
+cd /data/cmcc
+chmod g+x <your-username>
+```
+  (this allows all seme users to access and list directories in your folder);
+- add permissions to the `witch_results` folder to the specific users you want to collaborate with
+```  
+cd <your-username>`
+setfacl -m u:<a-trusted-persons-username>:rwx witch_results/
+```
+  and you can check that it worked by listing permissions using `getfacl witch_results/`.
+     
 
 ## Usage examples
 - Store a file:
