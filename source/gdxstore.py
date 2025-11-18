@@ -244,11 +244,13 @@ class GDXStore:
         
         try:
             # Validation steps
-            # Check if file is already stored
-            if (self.storage_folder / self.commit_hash / self.file_to_store).is_file():
-                raise GDXStoreError(f"{self.file_to_store} has already been stored!")
             self.check_file_reproducible()
             self.check_uncommitted_changes()
+
+            # Check if file is already stored
+            if ((self.storage_folder / self.commit_hash / self.file_to_store).is_file()
+                    and not self.patch):
+                raise GDXStoreError(f"{self.file_to_store} has already been stored and no patch is being generated!")
             
             # Get timing information
             latest_file, latest_source_time = self.get_latest_source_change()
