@@ -47,6 +47,9 @@ In case you are sure that the result was produced with the current version of th
 even if the latest change is later than the run start time, you can avoid this check by adding flag
 `no-timing-validation` to the command. Something like this can happen if, for example, you make some
 changes to the code while the code is running and then you revert them.
+Wildcards work: you can store a bunch of files like this:
+`gdxstore.py -s results_ssp2_*.gdx`.
+
 - Display the git log including the list of stored files for each commit:
 
 `gdxstore.py --log`
