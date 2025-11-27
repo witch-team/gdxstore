@@ -276,8 +276,10 @@ class GDXStore:
 def main():
     # Default settings
     conf = RawConfigParser()
-    conf.read('config.ini')
-    default_storage_folder = conf['storage'].get('storage_folder')
+    xdg_config_home = os.environ.get('XDG_CONFIG_HOME', os.path.expanduser('~/.config'))
+    config_files = ['config.ini', os.path.join(xdg_config_home, 'gdxstore', 'config.ini')]
+    conf.read(config_files)
+    default_storage_folder = conf['storage'].get('storage_folder') if conf.has_section('storage') else None
 
     # Command line options
     parser = argparse.ArgumentParser(description='Store and inspect GDX files')
