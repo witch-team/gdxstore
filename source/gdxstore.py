@@ -301,6 +301,11 @@ def main():
 
     args = parser.parse_args()
 
+    # Show help if no arguments provided
+    if not (args.s or args.d or args.log):
+        parser.print_help()
+        return
+
     # Storage
     if args.s:
         for file in args.files:    
