@@ -282,7 +282,20 @@ def main():
     default_storage_folder = conf['storage'].get('storage_folder') if conf.has_section('storage') else None
 
     # Command line options
-    parser = argparse.ArgumentParser(description='Store and inspect GDX files')
+    epilog_text = f"""
+Configuration file locations (checked in order):
+  1. ./config.ini (current directory)
+  2. {os.path.join(xdg_config_home, 'gdxstore', 'config.ini')}
+
+The config.ini file should contain:
+  [storage]
+  storage_folder = /path/to/your/storage/folder
+"""
+    parser = argparse.ArgumentParser(
+        description='Store and inspect GDX files',
+        epilog=epilog_text,
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument('-s', action='store_true',
                        help='Store a file')
     parser.add_argument('-d', action='store_true',
