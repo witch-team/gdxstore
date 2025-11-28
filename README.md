@@ -14,6 +14,9 @@ Then copy the configuration file to your WITCH installation folder. For example:
 and replace `<your-username>`, or change the whole path if you prefer.
 This is the path where all the files will be stored. A new subfolder will be created
 for each commit with files to store.
+In alternative, `config.ini` can be copied to `$XDG_CONFIG_HOME/gdxstore/` or `~/.config/gdxstore/`.
+The script first checks the current directory for the configuration file, then the two folders above, as
+a global default.
 The plan is to add more global options to `config.ini`, such as default gdxdiff tolerances
 and the log history start date.
 If on juno or cassandra, in order to let other people use your directory for storage, you need to
