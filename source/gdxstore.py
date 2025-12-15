@@ -252,12 +252,12 @@ class GDXStore:
                     and not self.patch):
                 raise GDXStoreError(f"{self.file_to_store} has already been stored and no patch is being generated!")
             
-            # Get timing information
-            latest_file, latest_source_time = self.get_latest_source_change()
+            # The start timestamp can be useful even if timing is not validated, as it determines the patch name
             start_timestamp = self.get_simulation_start_time()
             
             # Validate timing if requested
             if validate_timing:
+                latest_file, latest_source_time = self.get_latest_source_change()
                 self.validate_timing(start_timestamp, latest_source_time)
             
             self.store_file()
